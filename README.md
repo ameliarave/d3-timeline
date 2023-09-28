@@ -4,7 +4,7 @@ A project that uses d3 to implement custom interactions within a timeline to be 
 [View demo here:](https://jsfiddle.net/mimirave/bnaf9cyh/511/)
 
 <strong>To run locally:</strong>
-* Download Javascript, HTML, CSS files from repo
+* Download zip of code
 * Store in same directory
 * Launch HTML file in browser
 * _Optional:_ Make edits to <code>main.js</code> to change range of dates and/or dimensions of timeline
