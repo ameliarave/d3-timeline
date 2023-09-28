@@ -419,18 +419,3 @@ class View {
 } // End View 
 
 // =============================================================================================================//
-
-document.addEventListener("DOMContentLoaded", function() {
-  const container = d3.select("#container");  
-  const svg = container.append("svg")
-    .attr("viewBox", [0, 0, 960, 500]); // width and height hardcoded here
-
-  const start = new Date(2023, 5, 12, 10, 15); // year, month (0-indexed), day, hour (00:00-23:59), minute
-  const end = new Date(2023, 6, 14, 16, 30);
-  const view = new View(start, end, svg);
-});
-
-// =========================================================================================================== // 
-
-
-
