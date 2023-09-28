@@ -96,7 +96,8 @@ class View {
       .attr("x", 0.5)
       .attr("y", 0.5)
       .attr("width", this.width - 1)
-      .attr("height", this.height - 1);
+      .attr("height", this.height - 1)
+      .attr("fill", "url(#gradient)");
 
     this.gX = this.svg.append("g")
       .attr("class", "axis axis--x")   	
