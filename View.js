@@ -7,7 +7,7 @@ class View {
     // Initialize your x and y scales, axis, etc.
     this.x = d3.scaleTime(); // Just an example, use your own scale here
     this.y = d3.scaleLinear();
-		this.width = 960;
+    this.width = 960;
     this.height = 500;
     this.existingLine = null; // Accessible by all code after this definition
     this.existingDiv = null; 
