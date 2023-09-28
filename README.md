@@ -2,4 +2,4 @@
 A project that uses d3 to implement custom interactions within a timeline to be used for viewing the number of edits occurring at specific dates and times. 
 
 Demo:
-<script async src="//jsfiddle.net/mimirave/bnaf9cyh/511/embed/result/"></script>
+jsfiddle.net/mimirave/bnaf9cyh/511/embed/result/
