@@ -17,3 +17,9 @@
 .checkbox-div input[type="checkbox"] {
   pointer-events: auto;
 }
+
+#container {
+  width: 1161px;
+  height: 605.12px;
+  overflow: hidden;
+}
