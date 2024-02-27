@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
+// TODO: add source maps so that exceptions show the right line location
 // Library Configuration
 const libraryConfig = {
   entry: './src/View.js',

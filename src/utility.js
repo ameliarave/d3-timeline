@@ -1,5 +1,6 @@
 import { States } from "./View";
 import * as d3 from 'd3';
+import { EdgeView } from './view/edgeview';
 
 
 export function applyTransformation(view, xCoord){
@@ -86,6 +87,7 @@ export function createLine(view, id, xCord){
     .attr('stroke-width', 1)
     .attr('class', 'vertical-line')
     .attr('id', id);
+  let edgeView = new EdgeView(edge);
   edge.datum({date});
 
   // Create invisible dragBuffer behind line
@@ -107,12 +109,12 @@ export function createLine(view, id, xCord){
     .text(dateString)
 
   if(id === 1){
-    view.leftEdge = edge;
+    view.leftEdge = edgeView;
     view.dragBuffer1 = dragBuffer;
     view.dragBuffer1.call(view.drag);
     view.label1 = foreignObject;
   } else {
-    view.rightEdge = edge;
+    view.rightEdge = edgeView;
     view.dragBuffer2 = dragBuffer;
     view.label2 = foreignObject;
     view.dragBuffer2.call(view.drag);
@@ -132,11 +134,11 @@ export function getArrow(view){
 }
 
 export function getLeftEdge(view){
-  return parseFloat(view.leftEdge.attr('x1'));
+  return parseFloat(view.leftEdge.line.attr('x1'));
 }
 
 export function getLeftEdgeDate(view){
-  return view.leftEdge.datum().date;
+  return view.leftEdge.date;
 }
 
 export function getLeftDate(view){
@@ -148,12 +150,12 @@ export function getLeftX(view){
 }
 
 export function getRightEdge(view){
-  const rightEdge = view.rightEdge ? parseFloat(view.rightEdge.attr('x1')) : null;
+  const rightEdge = view.rightEdge ? parseFloat(view.rightEdge.line.attr('x1')) : null;
   return rightEdge;
 }
 
 export function getRightEdgeDate(view){
-  return view.rightEdge.datum().date;
+  return view.rightEdge.date;
 }
 
 export function getRightDate(view){
@@ -318,11 +320,11 @@ export function resetBlanket(view){ // Reset everything relating to blanket
     view.blanket = null;
   }
   if(view.leftEdge){
-    view.leftEdge.remove();
+    view.leftEdge.line.remove();
     view.leftEdge = null;
   }
   if(view.rightEdge){
-    view.rightEdge.remove();
+    view.rightEdge.line.remove();
     view.rightEdge = null;
   }
   if(view.label1){
@@ -367,18 +369,18 @@ export function setDragBuffer(view, id, xCoord){
 }
 
 export function setEdge(view, id, xCoord){
-  let edge = id === 1 || id === 2 ? view.leftEdge : null;
+  let edge = id === 1 || id === 2 ? view.leftEdge.line : null;
   if(!edge){return;}
-  edge = id === 1 ? edge : view.rightEdge;
+  edge = id === 1 ? edge : view.rightEdge.line;
   edge
     .attr('x1', xCoord)
     .attr('x2', xCoord);
 }
 
 export function setEdgeDate(view, id, date){
-  let edge = id === 1 || id === 2 ? view.leftEdge : null;
+  let edge = id === 1 || id === 2 ? view.leftEdge.line : null;
   if(!edge){return;}
-  edge = id === 1 ? edge : view.rightEdge;
+  edge = id === 1 ? edge : view.rightEdge.line;
   edge.datum().date = date;
 }
 

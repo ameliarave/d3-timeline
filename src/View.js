@@ -9,12 +9,21 @@ export const States = Object.freeze({
 
 export class View {
 
+  // FIXME: why aren't getters working
+  // get width() {
+  //   this.svg.node().width.baseVal.value;
+  // }
+
+  // get height() {
+  //   this.svg.node().height.baseVal.value;
+  // }
+
   constructor(startDate, endDate, svgElement) {
     this.startDate = startDate;
     this.endDate = endDate;
     this.svg = svgElement;
-    this.width = 1161;
-    this.height = 605.12;
+    this.width =  this.svg.node().width.baseVal.value;
+    this.height = this.svg.node().height.baseVal.value;
 
     this.arrow = null;
     this.arrowBuffer = null;
@@ -74,15 +83,16 @@ export class View {
       this.handlePointerUp(event);
     });
 
-    document.getElementById('resetButton').addEventListener('click', () => {
-      this.resetZoom();
-      this.setIdle();
-    });
 
     // Disable default context menu to prevent IOS from triggering its date selection functionality (i.e. add to calendar)
     this.svg.on("contextmenu", event => {
       event.preventDefault();
     });
+  }
+
+  reset() {
+    this.resetZoom();
+    this.setIdle();
   }
 
 // ================================================================================================================================== //
@@ -123,10 +133,9 @@ export class View {
 
     // If id == 3, we are dragging edge2 using arrow, so change id to 2 for logic in dragging() & dragEnd()
     if(this.id === 3){this.id = 2;}
-    let line = this.id === 1 ? this.leftEdge : this.rightEdge;
+    let edge = this.id === 1 ? this.leftEdge : this.rightEdge;
 
-    line.attr("stroke", "red"); // Change line color to give it a "highlighted" look
-    line.attr("stroke-width", 4); // Increase line width to make it more visible
+    edge.highlighted = true;
     // Animate arrow to prompt user to drag it
     if(this.arrow){
       this.arrow
@@ -194,14 +203,14 @@ export class View {
 
       // Swap highlighted line
       let line = this.id === 1 ? this.leftEdge : this.rightEdge;
-      line.attr('stroke-width', 1);
+      line.highlighted = false;
 
       // Must swap id for edge being dragged
       this.id = this.id === 1 ? 2 : 1;
 
       // Finish swapping highlighted line
       line = this.id === 1 ? this.leftEdge : this.rightEdge;
-      line.attr('stroke-width', 4);
+      line.highlighted = true;
 
     } else {
       // Label follow drag
@@ -237,8 +246,7 @@ export class View {
 
     const line = this.id === 1 ? this.leftEdge : this.rightEdge;
     // Revert the line to its original appearance
-    line.attr("stroke", "red");
-    line.attr("stroke-width", 1);
+    line.highlighted = false;
 
     switch(this.currentState.state){
       case States.DATE_SELECTED:
@@ -295,8 +303,7 @@ export class View {
         // Other elements were already updated in dragging()
         this.setEdgeDate(1, date);
         // Revert the line to its original appearance
-        this.leftEdge.attr("stroke", "red");
-        this.leftEdge.attr("stroke-width", 1);
+        this.leftEdge.highlighted = false;
       } else {  // Envoked by longPress
         this.setEdge(1, this.mouseX);
         this.setEdgeDate(1, date);
