@@ -1,0 +1,23 @@
+{
+  "name": "d3-view-timeline",
+  "version": "0.0.0",
+  "description": "A library that uses d3 to implement custom interactions within a timeline to be used for viewing counts at specific dates and times.",
+  "main": "dist/view-library.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start-lib": "webpack serve --config webpack.config.js --env target=library",
+    "build-lib": "webpack --config webpack.config.js --env target=library",
+    "start-example": "webpack serve --config webpack.config.js --env target=example",
+    "build-example": "webpack --config webpack.config.js --env target=example"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "copy-webpack-plugin": "^11.0.0",
+    "html-webpack-plugin": "^5.5.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}
