@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-lib": "webpack serve --config webpack.config.js --env target=library",
     "build-lib": "webpack --config webpack.config.js --env target=library",
-    "start-example": "webpack serve --config webpack.config.js --env target=example",
-    "build-example": "webpack --config webpack.config.js --env target=example"
+    "start": "webpack serve --config webpack.config.js --env target=example",
+    "build": "webpack --config webpack.config.js --env target=example"
   },
   "keywords": [],
   "author": "",
