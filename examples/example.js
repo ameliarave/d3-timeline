@@ -4,10 +4,7 @@ import * as d3 from 'd3';
 document.addEventListener("DOMContentLoaded", function() {
   // TODO: container resizes should trigger a redraw
   const container = d3.select("#container");
-  const width =  container.clientWidth;
-  const height = container.clientHeight;
   const svg = container.append("svg")
-    .attr("viewBox", [0, 0, width, height]) // width and height hardcoded her
     .attr("width", '100%')
     .attr("height", '400px')
 
