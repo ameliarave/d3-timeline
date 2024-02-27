@@ -1,6 +1,8 @@
 import { States } from "./View";
+import * as d3 from 'd3';
 
-export function applyTransformation(view, xCoord){ 
+
+export function applyTransformation(view, xCoord){
   return view.lastTransform.applyX(xCoord);
 }
 
@@ -12,12 +14,12 @@ export function convertToDate(view, coord){
 
 // Converts a date obj() to an x-coord based on original x-scale. Does not apply any transformation.
 export function convertToCoord(view, date){
-  if(!date){return null;}  
+  if(!date){return null;}
   return view.x(date);
 }
 
 export function createArrow(view){
-  const defs = view.svg.append('defs');  
+  const defs = view.svg.append('defs');
   const y = view.height - 200;//d3.pointer(event)[1] + 100;
 
   const createMarker = (id, color) => {
@@ -33,7 +35,7 @@ export function createArrow(view){
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('fill', color);
   };
-  
+
   createMarker('arrow-start', '#fff');
   createMarker('arrow-end', '#fff');
   const line = view.svg.append('line')
@@ -46,7 +48,7 @@ export function createArrow(view){
   .attr('marker-start', 'url(#arrow-start)')
   .attr('marker-end', 'url(#arrow-end)');
 
-  view.arrow = line;  
+  view.arrow = line;
   view.arrowBuffer = createBuffer(view, 3, view.mouseX + 5, y - 20);
   view.arrowBuffer.call(view.drag);
 }
@@ -67,7 +69,7 @@ export function createBuffer(view, id, xCord, yCord = 0){
     .attr("opacity", 0) // invisible
     .attr('id', id)
     .attr('class', 'buffer');
-  dragBuffer.style('cursor', 'pointer'); 
+  dragBuffer.style('cursor', 'pointer');
 
   return dragBuffer;
 }
@@ -103,7 +105,7 @@ export function createLine(view, id, xCord){
   foreignObject.append("xhtml:div")
     .attr("class", "line-label")
     .text(dateString)
-  
+
   if(id === 1){
     view.leftEdge = edge;
     view.dragBuffer1 = dragBuffer;
@@ -123,7 +125,7 @@ export function dateToString(dateObj){
   return dateString;
 }
 
-// Returns only x1 coordinate of Arrow 
+// Returns only x1 coordinate of Arrow
 export function getArrow(view){
   if(!view.arrow){return null;}
   return view.arrow.attr('x1');
@@ -168,7 +170,7 @@ export function handleClick(view){
     return; // Don't register pan as click
   } else {
     view.setIdle();
-  } 
+  }
 }
 
 // Handler for a "long press" click. Sets a date selection.
@@ -177,7 +179,7 @@ export function handleLongPress(view, event){
     // It's a multi-touch event (like pinch), so don't treat it as a long press
     return;
   }
-  view.mouseX = d3.pointer(event)[0]; 
+  view.mouseX = d3.pointer(event)[0];
 
   switch (view.currentState.state){
     case States.IDLE:
@@ -192,11 +194,11 @@ export function handleLongPress(view, event){
       view.setIdle();
       view.setDateSelected();
       break;
-  }    
+  }
   view.longPress = false; // Reset this flag
 }
 
-export function handlePointerDown(view, event) {    
+export function handlePointerDown(view, event) {
   if(event.pointerType === 'touch'){
     view.activeTouch++;
     // If multiple active touches, user is trying to zoom or pan, so don't trigger longPress/click
@@ -267,7 +269,7 @@ export function initBlanket(view){
   }
 }
 
-export function printState(view){  
+export function printState(view){
   const state = view.currentState;
   let data1 = null;
   let data2 = null;
@@ -298,8 +300,8 @@ export function removeArrow(view){
 }
 
 export function removeDragBuffers(view){
-  if(view.dragBuffer1){        
-    view.dragBuffer1.remove();        
+  if(view.dragBuffer1){
+    view.dragBuffer1.remove();
     view.dragBuffer1 = null;
   }
   if(view.dragBuffer2){
@@ -311,18 +313,18 @@ export function removeDragBuffers(view){
 export function resetBlanket(view){ // Reset everything relating to blanket
   removeArrow(view);
   removeDragBuffers(view);
-  if(view.blanket){    
+  if(view.blanket){
     view.blanket.remove();
-    view.blanket = null;        
+    view.blanket = null;
   }
-  if(view.leftEdge){        
-    view.leftEdge.remove();    
+  if(view.leftEdge){
+    view.leftEdge.remove();
     view.leftEdge = null;
   }
   if(view.rightEdge){
     view.rightEdge.remove();
     view.rightEdge = null;
-  }   
+  }
   if(view.label1){
     view.label1.remove();
     view.label1 = null;
@@ -357,7 +359,7 @@ export function setBlanket(view, leftX, rightX){
 
 export function setDragBuffer(view, id, xCoord){
   // If id != 1 or 2, buffer == null
-  let buffer = id === 1 || id === 2 ? view.dragBuffer1 : null;  
+  let buffer = id === 1 || id === 2 ? view.dragBuffer1 : null;
   if(!buffer){return;}
   // Assign buffer respective to id parameter
   buffer = id === 1 ? buffer : view.dragBuffer2;
@@ -384,7 +386,7 @@ export function setLabel(view, id, xCoord){
   let label = id === 1 || id === 2 ? view.label1 : null;
   if(!label){return;}
   label = id === 1 ? label : view.label2;
-  let val = id === 1 ? xCoord - 176 : xCoord + 15;  
+  let val = id === 1 ? xCoord - 176 : xCoord + 15;
   label.attr('x', val);
 }
 
@@ -421,7 +423,7 @@ export function setStateCoords(view, leftX, rightX){
   };
 }
 
-export function setupScales(view){  
+export function setupScales(view){
   // Set up SVG, scales, and axes.
   view.x = d3.scaleTime()
     .domain([view.startDate, view.endDate])
@@ -439,11 +441,11 @@ export function setupScales(view){
   view.yAxis = d3.axisRight(view.y)
     .ticks(10)
     .tickSize(view.width)
-    .tickPadding(8 - view.width)  
+    .tickPadding(8 - view.width)
 }
 
-export function setupSVG(viewInst){  
-  // Define gradient 
+export function setupSVG(viewInst){
+  // Define gradient
   const defs = viewInst.svg.append("defs");
   const gradient = defs.append("linearGradient")
     .attr("id", "gradient")
@@ -479,31 +481,31 @@ export function setupSVG(viewInst){
     .attr("height", viewInst.height +1)
 
   viewInst.gX = viewInst.svg.append("g")
-    .attr("class", "axis axis--x")   	
+    .attr("class", "axis axis--x")
     .call(viewInst.xAxis);
 
   viewInst.gY = viewInst.svg.append("g")
     .attr("class", "axis axis--y")
-    .call(viewInst.yAxis);      
+    .call(viewInst.yAxis);
 }
 
-export function setupZoom(view){  
+export function setupZoom(view){
   view.zoom = d3.zoom()
     .scaleExtent([1, 100])
     .translateExtent([[-25, -25], [view.width, view.height]])
-    .on("start", () => {   
-      zoomStart(view);      
+    .on("start", () => {
+      zoomStart(view);
     })
-    .on("zoom", (event) => {      
+    .on("zoom", (event) => {
       let d = event.transform;
       if (d.x !== 0 || d.y !== 0 || d.k !== 1) {
           view.isPanning = true; // set to true if transformation detected
       }
       zooming(view, event);
-    }) 
-    .on("end", () => {   
-      zoomEnd(view);      
-    })     
+    })
+    .on("end", () => {
+      zoomEnd(view);
+    })
 }
 
 export function setLabelDate(view, labelNum, date){
@@ -514,9 +516,9 @@ export function setLabelDate(view, labelNum, date){
 
 export function swapEdges(view){
   let xCoord = view.id === 1 ? getLeftEdge(view) : getRightEdge(view);
-  
+
   let newDate = convertToDate(view, xCoord);
-  
+
   // Update whichever line is being dragged
   setEdgeDate(view, view.id, newDate);
 
@@ -524,22 +526,22 @@ export function swapEdges(view){
   const tempX = getLeftEdge(view);
   const tempDate = getLeftEdgeDate(view);
 
-  // leftEdge = rightEdge   
+  // leftEdge = rightEdge
   setEdge(view, 1, getRightEdge(view));
-  setEdgeDate(view, 1, getRightEdgeDate(view));  
+  setEdgeDate(view, 1, getRightEdgeDate(view));
   setDragBuffer(view, 1, getRightEdge(view));
 
   // rightEdge = leftEdge
   setEdge(view, 2, tempX);
-  setEdgeDate(view, 2, tempDate);  
+  setEdgeDate(view, 2, tempDate);
   setDragBuffer(view, 2, tempX);
 
   // Keep state updated
   setState(view, view.currentState.state, getLeftEdge(view), getRightEdge(view), getLeftEdgeDate(view), getRightEdgeDate(view));
 }
 
-export function transformBlanket(view, zoomLeft, zoomRight){  
-  let leftX = applyTransformation(view, zoomLeft); 
+export function transformBlanket(view, zoomLeft, zoomRight){
+  let leftX = applyTransformation(view, zoomLeft);
   let rightX = applyTransformation(view, zoomRight);
   setBlanket(view, leftX, rightX);
 }
@@ -547,39 +549,39 @@ export function transformBlanket(view, zoomLeft, zoomRight){
 export function transformLine(view, zoomLeft, zoomRight){
   // Transform original x-coord not the most recently transformed version, otherwise cumulative transformation => big deltas
   let leftX = applyTransformation(view, zoomLeft);
-  let rightX = view.rightEdge ? applyTransformation(view, zoomRight) : null; 
+  let rightX = view.rightEdge ? applyTransformation(view, zoomRight) : null;
 
   if(leftX){
-    setEdge(view, 1, leftX);        
+    setEdge(view, 1, leftX);
     setDragBuffer(view, 1, leftX);
-    setLabel(view, 1, leftX);     
+    setLabel(view, 1, leftX);
     setArrow(view, leftX);
-    setArrowBuffer(view, leftX);    
+    setArrowBuffer(view, leftX);
   }
-  if(rightX){    
+  if(rightX){
     setEdge(view, 2, rightX);
     setDragBuffer(view, 2, rightX);
-    setLabel(view, 2, rightX);     
-  }  
+    setLabel(view, 2, rightX);
+  }
 }
 
-export function updateBlanket(view){ 
+export function updateBlanket(view){
   if(!view.blanket){return;}
   let left, right, stationaryX, dynamicX;
 
-  if(getRightEdge(view) === getLeftEdge(view)){    
+  if(getRightEdge(view) === getLeftEdge(view)){
     setBlanket(view, view.leftStop - 1, view.leftStop);
   } else {
     stationaryX = view.id === 1 ? getRightEdge(view) : getLeftEdge(view);
     if (view.offset){
       // blanket & edges not direct from mouseX
-      if(view.mouseX >= view.leftStop + view.offset){        
+      if(view.mouseX >= view.leftStop + view.offset){
         dynamicX = parseFloat(view.mouseX) - view.offset;
-      } else if (view.mouseX < view.leftStop - view.offset){        
+      } else if (view.mouseX < view.leftStop - view.offset){
         dynamicX = parseFloat(view.mouseX) + view.offset;
-      } 
+      }
     } else {
-      // blanket & edges follow mouseX directly  
+      // blanket & edges follow mouseX directly
       dynamicX = parseFloat(view.mouseX);
     }
     left = Math.min(stationaryX, dynamicX);
@@ -594,14 +596,14 @@ export function zoomStart(view){
   if(!view.leftEdge){ return; }
   view.isPanning = false
 
-  // These are the original x-coords from before transformation to use throughout zoom event 
-  zoomLeft = convertToCoord(view, getLeftEdgeDate(view));  
+  // These are the original x-coords from before transformation to use throughout zoom event
+  zoomLeft = convertToCoord(view, getLeftEdgeDate(view));
   zoomRight = view.rightEdge ? convertToCoord(view, getRightEdgeDate(view)) : null;
 }
 
-export function zooming(view, event){ 
+export function zooming(view, event){
   const { transform } = event;
-  view.lastTransform = transform;  // Update the last transform    
+  view.lastTransform = transform;  // Update the last transform
   view.gX.call(view.xAxis.scale(view.lastTransform.rescaleX(view.x)));
   view.gY.call(view.yAxis.scale(view.lastTransform.rescaleY(view.y)));
   if(!view.leftEdge){ return; }
@@ -612,7 +614,7 @@ export function zooming(view, event){
   // Update positions of blanket edge(s)
   if (view.blanket){
     transformBlanket(view, zoomLeft, zoomRight);
-  }        
+  }
 }
 
 export function zoomEnd(view) {
@@ -622,14 +624,14 @@ export function zoomEnd(view) {
   }
   view.isPanning = false;
   // Now we can update the state to reflect new transformations
-  setStateCoords(view, getLeftEdge(view), getRightEdge(view));  
-  printState(view);  
+  setStateCoords(view, getLeftEdge(view), getRightEdge(view));
+  printState(view);
 }
 
 /*
 TODO:
 (DONE) Fix zoom transformations for new objects: applyX() & always start with original-scale X coord
-(DONE) Swapping Labels on overlap 
+(DONE) Swapping Labels on overlap
 (DONE) Arrow dynamics for drag [ arrow hidden after range_selected -> reappears in date_selected ]
 (DONE) Initial blanket placement & drag intuition (arrow under cursor or blanket edge?)
 (DONE) Bug: range_selected not being set after swap() happens on initial blanket creation/pinning
@@ -637,14 +639,14 @@ TODO:
 (DONE) DragBuffer2 disappearing after edge swap
 (2.3) What to do when edges dragged near boundaries & label is unreadable?
        => Also just general dynamics at boundaries
-       => SOLUTION I: When blanket is close to viewable boundary (in default zoom, this is end of date range), move respective label to be 
+       => SOLUTION I: When blanket is close to viewable boundary (in default zoom, this is end of date range), move respective label to be
           pinned inside the respective left/right blanket edge
         => SOLUTION II: Pan the timeline along with drag that would otherwise go out of frame (such that label is visible). If reaches end of date range, move label
         to inside of blanket so user can drag edge all the way up until the end of the date range
 
         NOTE: even with single date_selected, user can currently drag leftEdge off the end of the timeline and past end of date range => needs fixing
 (2.4) Zooming on mobile while one finger is on a dragabble item....glitches
-       
+
 (DONE) Debug Mobile
 (4) Beautify code
 (5) Write tests

@@ -1,3 +1,4 @@
+import * as d3 from "d3";
 import * as util from "./utility";
 
 export const States = Object.freeze({
@@ -13,8 +14,8 @@ export class View {
     this.endDate = endDate;
     this.svg = svgElement;
     this.width = 1161;
-    this.height = 605.12;               
-    
+    this.height = 605.12;
+
     this.arrow = null;
     this.arrowBuffer = null;
     this.activeTouch = 0; // counter to determine how many active touches on mobile screen. Used to avoid undesired click triggers
@@ -24,8 +25,8 @@ export class View {
     this.leftEdge = null;  // d3 <line> element that represents a selected date
     this.offset = null;
     this.rightEdge= null;   // d3 <line> element that represents a selected date
-    this.timer = null; // reference to setTimeout in pointerDown and pointerUp handlers - differentiate longPress / click 
-    this.id = null;   // id is either 1 or 2 in regard to leftEdge & rightEdge. Used to determine which <line> to modify    
+    this.timer = null; // reference to setTimeout in pointerDown and pointerUp handlers - differentiate longPress / click
+    this.id = null;   // id is either 1 or 2 in regard to leftEdge & rightEdge. Used to determine which <line> to modify
     this.isDragging = false; // flag to avoid pointerUp handler executing at termination of a drag
     this.isPanning = false; // flag used to differentiate between click and pans/zooms
     this.label1 = null; // div displaying datetime of line 1 selection
@@ -33,7 +34,7 @@ export class View {
     this.lastTransform = d3.zoomIdentity; // holds details x,y,k of most recent d3 zoom transformation. Used to transform other elements/dates
     this.longPress = false; // flag used in pointerUp listener to correctly trigger handleClick function
     this.logNum = 0; // DEBUG purposes for custom logging
-    this.mouseX = null; // holds most recent/current x-coordinate of the mouse or touch interaction    
+    this.mouseX = null; // holds most recent/current x-coordinate of the mouse or touch interaction
 
     // Define initial state
     this.currentState = {
@@ -45,7 +46,7 @@ export class View {
     }
 
     // Declare x and y scales, axis, etc
-    util.setupScales(this);    
+    util.setupScales(this);
     util.setupSVG(this);
     util.setupZoom(this);
 
@@ -53,25 +54,25 @@ export class View {
     this.drag = d3.drag()
       .on("start", this.dragStart.bind(this))
       .on("drag", this.dragging.bind(this))
-      .on("end", this.dragEnd.bind(this));    
-    
+      .on("end", this.dragEnd.bind(this));
+
     // Envoke d3 zoom behavior
     this.svg.call(this.zoom);
     // Disable default double-click behavior so mobile devices don't register longPress as double-click
-    this.svg.on("dblclick.zoom", null);              
+    this.svg.on("dblclick.zoom", null);
 
     this.view.on("pointerdown", (event) => {
       this.longPress = false;
       this.handlePointerDown(event);
     });
 
-    this.view.on("pointerup", (event) => { 
-      if(this.isDragging) { return; } // Don't handle pointerup event if dragging 
-      if(!this.longPress && !this.isPanning){  // Regular click 
+    this.view.on("pointerup", (event) => {
+      if(this.isDragging) { return; } // Don't handle pointerup event if dragging
+      if(!this.longPress && !this.isPanning){  // Regular click
         this.handleClick();
       }
-      this.handlePointerUp(event);      
-    }); 
+      this.handlePointerUp(event);
+    });
 
     document.getElementById('resetButton').addEventListener('click', () => {
       this.resetZoom();
@@ -81,14 +82,14 @@ export class View {
     // Disable default context menu to prevent IOS from triggering its date selection functionality (i.e. add to calendar)
     this.svg.on("contextmenu", event => {
       event.preventDefault();
-    });    
+    });
   }
 
 // ================================================================================================================================== //
 // ======================================================VVVV DRAG HANDLERS VVVV==================================================== //
 // ================================================================================================================================== //
 
-  // Handler that is triggered once every time d3 drag behavior is triggered 
+  // Handler that is triggered once every time d3 drag behavior is triggered
   // Tracks which element has been selected for dragging and behaves conditionally based on this
   dragStart(event) {
     let coord;
@@ -102,11 +103,11 @@ export class View {
     // We only want the x-coordinate
     this.mouseX = coord[0];
     this.isDragging = true;
-    this.activeTouch++;    
+    this.activeTouch++;
     const target = d3.select(event.sourceEvent.target);
 
     // If target is either end of the arrow, id == 3 , else get id == 1 or id == 2 based on which edge selected
-    this.id = target === 'arrow-start' || target === 'arrow-end' ? 3 : Number(target.attr('id'));     
+    this.id = target === 'arrow-start' || target === 'arrow-end' ? 3 : Number(target.attr('id'));
 
     // If dragging the arrow, we create a range selection
     if(this.id === 3){
@@ -117,43 +118,43 @@ export class View {
         this.leftStop = this.getLeftEdge();
         util.createLine(this, 2, this.getLeftEdge());
         this.initBlanket();
-      } 
+      }
     }
 
-    // If id == 3, we are dragging edge2 using arrow, so change id to 2 for logic in dragging() & dragEnd() 
+    // If id == 3, we are dragging edge2 using arrow, so change id to 2 for logic in dragging() & dragEnd()
     if(this.id === 3){this.id = 2;}
-    let line = this.id === 1 ? this.leftEdge : this.rightEdge;    
+    let line = this.id === 1 ? this.leftEdge : this.rightEdge;
 
-    line.attr("stroke", "red"); // Change line color to give it a "highlighted" look    
+    line.attr("stroke", "red"); // Change line color to give it a "highlighted" look
     line.attr("stroke-width", 4); // Increase line width to make it more visible
     // Animate arrow to prompt user to drag it
     if(this.arrow){
       this.arrow
       .transition()
       .duration(10)
-      .attr('transform', 'translate(-30, -30) scale(1.08)');      
-    }    
+      .attr('transform', 'translate(-30, -30) scale(1.08)');
+    }
   }
 
   // Handler for each movement inbetween dragStart and dragEnd. Usually called many times.
   // Tracks cursor locations and updates visual elements accordingly
-  dragging(event) { // During drag    
+  dragging(event) { // During drag
     let coord;
     if(event.sourceEvent.touches){ // Checking for the existence of a 'touchesList' indicating a touch screen input
-      coord = d3.pointer(event.sourceEvent.touches[0]); // 'touches' is a touchList of all objects that are currently 
+      coord = d3.pointer(event.sourceEvent.touches[0]); // 'touches' is a touchList of all objects that are currently
                                                         // in contact with screen and hagve not yet been released
-      coord = d3.pointer(event.sourceEvent.changedTouches[0]);  // changedTouches contains points of contact whose states changed between touchstart, move, & touchend                                  
+      coord = d3.pointer(event.sourceEvent.changedTouches[0]);  // changedTouches contains points of contact whose states changed between touchstart, move, & touchend
     } else {
       coord = d3.pointer(event);
     }
     this.mouseX = coord[0]; // Current mouse position via touch or mouse
-    
+
     // Dragging rightEdge across leftEdge...
     // When cursor is far enough away from 'leftStop' start moving leftEdge again
     //   =>  IF (mouseX < (leftStop - offset)) THEN leftEdge = (mouseX + offset)
     //
     // Dragging leftEdge across rightEdge...
-    // When cursor is far enough away from 'leftStop', start moving rightEdge again 
+    // When cursor is far enough away from 'leftStop', start moving rightEdge again
     //   => IF (mouseX >= /(leftStop + offset) THEN rightEdge = [ mouseX - offset ]
     //
     // When cursor is NOT far enough away from 'leftStop' THEN leftEdge or rightEdge = leftStop
@@ -162,7 +163,7 @@ export class View {
       if(this.mouseX >= this.leftStop + this.offset){
         target = this.mouseX - this.offset;
         arrowTarget = target - 8;
-  
+
       } else if(this.mouseX < this.leftStop - this.offset){
         target = this.mouseX + this.offset;
         arrowTarget = this.mouseX - 60;
@@ -174,12 +175,12 @@ export class View {
       target = this.mouseX;
       arrowTarget = target;
     }
-    
+
     this.setEdge(this.id, target);
     this.setDragBuffer(this.id, target);
 
     // Maintain the invariant that leftEdge <= rightEdge. Check if they need to be swapped.
-    if (this.rightEdge && this.getLeftEdge() > this.getRightEdge() ){      
+    if (this.rightEdge && this.getLeftEdge() > this.getRightEdge() ){
       // Swap everything concerning edges
       this.swapEdges();
 
@@ -189,7 +190,7 @@ export class View {
 
       // Swap label dates respectively
       this.setLabelDate(1, this.convertToDate(this.getLeftEdge()));
-      this.setLabelDate(2, this.convertToDate(this.getRightEdge()));      
+      this.setLabelDate(2, this.convertToDate(this.getRightEdge()));
 
       // Swap highlighted line
       let line = this.id === 1 ? this.leftEdge : this.rightEdge;
@@ -201,14 +202,14 @@ export class View {
       // Finish swapping highlighted line
       line = this.id === 1 ? this.leftEdge : this.rightEdge;
       line.attr('stroke-width', 4);
-            
+
     } else {
       // Label follow drag
       this.setLabel(this.id, target);
 
       // Update label text to display datetime of new position
       const labelNum = this.id === 1 ? 1 : 2;
-      this.setLabelDate(labelNum, this.convertToDate(target));      
+      this.setLabelDate(labelNum, this.convertToDate(target));
     }
 
     // Update dragged edge's internal date
@@ -218,8 +219,8 @@ export class View {
     this.setArrow(arrowTarget);
 
     // Blanket changes size with drag
-    this.updateBlanket();    
-  }  
+    this.updateBlanket();
+  }
 
   // Handler for the end of of a drag event / release of cursor
   // Updates state based on the changes that visual elements underwent in dragging()
@@ -231,16 +232,16 @@ export class View {
     } else {
       coord = d3.pointer(event);
     }
-    this.mouseX = coord[0];  
-    this.activeTouch--;    
-  
+    this.mouseX = coord[0];
+    this.activeTouch--;
+
     const line = this.id === 1 ? this.leftEdge : this.rightEdge;
     // Revert the line to its original appearance
     line.attr("stroke", "red");
     line.attr("stroke-width", 1);
 
     switch(this.currentState.state){
-      case States.DATE_SELECTED:           
+      case States.DATE_SELECTED:
         if(this.rightEdge){
           // User draged rightEdge into position to select an initial range
           this.setRangeSelected();
@@ -261,42 +262,42 @@ export class View {
       this.arrow
       .transition()
       .duration(10)
-      .attr('transform', ''); 
-    }    
+      .attr('transform', '');
+    }
 
     // reset global id var for next drag event
     this.id = null;
     this.isDragging = false;
-    this.offset = null;    
-  }    
+    this.offset = null;
+  }
 
 // ================================================================================================================================== //
 // ======================================================VVVV STATE SETTERS VVVV==================================================== //
-// ================================================================================================================================== //     
+// ================================================================================================================================== //
 
   // Removes all current elements from previous state & sets state to idle
   setIdle(){
     this.resetBlanket();
-    this.setState(States.IDLE, null, null, null, null);        
+    this.setState(States.IDLE, null, null, null, null);
     this.printState();
   }
 
   // Handles the selection of a single date associated with a single vertical line.
-  // Envoked in handleLongPress() & dragEnd(). 
-  // Parameter 'flag' tells us if we need to also set Label, Arrow, & dragBuffer or not 
+  // Envoked in handleLongPress() & dragEnd().
+  // Parameter 'flag' tells us if we need to also set Label, Arrow, & dragBuffer or not
   setDateSelected(flag = null){
     const date = this.convertToDate(this.mouseX);
-    if(this.currentState.state === States.IDLE){ // IDLE => DATE_SELECTED 
+    if(this.currentState.state === States.IDLE){ // IDLE => DATE_SELECTED
       this.createLineOne();
       this.createArrow();
     } else if (this.currentState.state === States.DATE_SELECTED){
-      if(!flag){  // Envoked by dragEnd()       
-        // Other elements were already updated in dragging() 
+      if(!flag){  // Envoked by dragEnd()
+        // Other elements were already updated in dragging()
         this.setEdgeDate(1, date);
         // Revert the line to its original appearance
         this.leftEdge.attr("stroke", "red");
         this.leftEdge.attr("stroke-width", 1);
-      } else {  // Envoked by longPress 
+      } else {  // Envoked by longPress
         this.setEdge(1, this.mouseX);
         this.setEdgeDate(1, date);
         this.setDragBuffer(1, this.mouseX);
@@ -312,8 +313,8 @@ export class View {
   // Handles the selection of a range between two dates associated with two vertical lines and a grey <rect> ('blanket')
   // Envoked in dragEnd() for both initial range and updating the current range
   setRangeSelected(){
-    const leftX = this.getLeftEdge(); 
-    const rightX = this.getRightEdge(); 
+    const leftX = this.getLeftEdge();
+    const rightX = this.getRightEdge();
     const leftDate = this.convertToDate(leftX);
     const rightDate = this.convertToDate(rightX);
 
@@ -324,13 +325,13 @@ export class View {
     this.dragBuffer1.call(this.drag); // TODO move to one call in util.createLine()
     this.dragBuffer2.call(this.drag); // TODO ISSUE: single call in createLine()
 
-    this.removeArrow();                                    
+    this.removeArrow();
     this.printState();
   }
 
 // ================================================================================================================================== //
 // =========================================================VVVV UTILITIES VVVV====================================================== //
-// ================================================================================================================================== //     
+// ================================================================================================================================== //
 
   convertToDate(coord){
     return util.convertToDate(this, coord);
@@ -342,9 +343,9 @@ export class View {
 
   createLineOne(){
     util.createLine(this, 1, this.mouseX);
-  } 
+  }
 
-  customLog(message) {    
+  customLog(message) {
     const logDiv = document.getElementById('logOutput');
     //const currentTime = new Date().toLocaleTimeString(); // Adds a timestamp
     logDiv.innerHTML += `<p>[${this.logNum}]   ${message}</p>`;
@@ -354,7 +355,7 @@ export class View {
 
   dateToString(dateObj){
     return util.dateToString(dateObj);
-  }  
+  }
 
   getArrow(){
     return util.getArrow(this);
@@ -414,7 +415,7 @@ export class View {
 
   printState(){
     util.printState(this);
-  }  
+  }
 
   removeArrow(){
     util.removeArrow(this);
@@ -488,13 +489,13 @@ export class View {
 
   transformBlanket(){
     util.transformBlanket(this);
-  }  
+  }
 
   transformLine(){
     util.transformLine(this)
   }
 
-  updateBlanket() {  
+  updateBlanket() {
     util.updateBlanket(this);
-  }  
-} // End View 
+  }
+} // End View
