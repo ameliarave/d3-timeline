@@ -123,10 +123,10 @@ export class View {
     if(this.id === 3){
       if(this.currentState.state === States.DATE_SELECTED){ // State: DATE_SELECTED -> RANGE_SELECTED
         // rightEdge does not exist yet, so we create it
-        this.offset = parseFloat(this.mouseX) - this.getLeftEdge();
+        this.offset = parseFloat(this.mouseX) - this.leftEdge.x;
         // leftStop helps us in calculations for visual behavior of edges crossing over one another during range selection
-        this.leftStop = this.getLeftEdge();
-        util.createLine(this, 2, this.getLeftEdge());
+        this.leftStop = this.leftEdge.x;
+        util.createLine(this, 2, this.leftEdge.x);
         this.initBlanket();
       }
     }
@@ -189,16 +189,16 @@ export class View {
     this.setDragBuffer(this.id, target);
 
     // Maintain the invariant that leftEdge <= rightEdge. Check if they need to be swapped.
-    if (this.rightEdge && this.getLeftEdge() > this.getRightEdge() ){
+    if (this.rightEdge && this.leftEdge.x > this.getRightEdge() ){
       // Swap everything concerning edges
       this.swapEdges();
 
       // Swap label coordinates relative to respective edges
-      this.setLabel(1, this.getLeftEdge());
+      this.setLabel(1, this.leftEdge.x);
       this.setLabel(2, this.getRightEdge());
 
       // Swap label dates respectively
-      this.setLabelDate(1, this.convertToDate(this.getLeftEdge()));
+      this.setLabelDate(1, this.convertToDate(this.leftEdge.x));
       this.setLabelDate(2, this.convertToDate(this.getRightEdge()));
 
       // Swap highlighted line
@@ -313,14 +313,14 @@ export class View {
         this.setArrow(this.mouseX);
       }
     }
-    this.setState(States.DATE_SELECTED, this.getLeftEdge(), null, this.getLeftEdgeDate(), null);
+    this.setState(States.DATE_SELECTED, this.leftEdge.x, null, this.leftEdge.date, null);
     this.printState();
   }
 
   // Handles the selection of a range between two dates associated with two vertical lines and a grey <rect> ('blanket')
   // Envoked in dragEnd() for both initial range and updating the current range
   setRangeSelected(){
-    const leftX = this.getLeftEdge();
+    const leftX = this.leftEdge.x;
     const rightX = this.getRightEdge();
     const leftDate = this.convertToDate(leftX);
     const rightDate = this.convertToDate(rightX);
@@ -366,14 +366,6 @@ export class View {
 
   getArrow(){
     return util.getArrow(this);
-  }
-
-  getLeftEdge(){
-    return util.getLeftEdge(this);
-  }
-
-  getLeftEdgeDate(){
-    return util.getLeftEdgeDate(this);
   }
 
   getLeftDate(){

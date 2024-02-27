@@ -133,13 +133,15 @@ export function getArrow(view){
   return view.arrow.attr('x1');
 }
 
-export function getLeftEdge(view){
-  return parseFloat(view.leftEdge.line.attr('x1'));
-}
 
-export function getLeftEdgeDate(view){
-  return view.leftEdge.date;
-}
+// Delete
+// export function view.leftEdge.x{
+//   return parseFloat(view.leftEdge.line.attr('x1'));
+// }
+
+// export function view.leftEdge.date{
+//   return view.leftEdge.date;
+// }
 
 export function getLeftDate(view){
   return view.currentState.leftDate;
@@ -266,7 +268,7 @@ export function initBlanket(view){
       .attr('opacity', 0.4)
       .attr('class', "blanket");
     console.log("Blanket initialized");
-    view.dragBuffer1 = createBuffer(view, 1, view.getLeftEdge());
+    view.dragBuffer1 = createBuffer(view, 1, view.leftEdge.x);
     view.dragBuffer2 = createBuffer(view, 2, view.getRightEdge());
   }
 }
@@ -517,7 +519,7 @@ export function setLabelDate(view, labelNum, date){
 }
 
 export function swapEdges(view){
-  let xCoord = view.id === 1 ? getLeftEdge(view) : getRightEdge(view);
+  let xCoord = view.id === 1 ? view.leftEdge.x : getRightEdge(view);
 
   let newDate = convertToDate(view, xCoord);
 
@@ -525,8 +527,8 @@ export function swapEdges(view){
   setEdgeDate(view, view.id, newDate);
 
   // Aux variables for swapping
-  const tempX = getLeftEdge(view);
-  const tempDate = getLeftEdgeDate(view);
+  const tempX = view.leftEdge.x;
+  const tempDate = view.leftEdge.date;
 
   // leftEdge = rightEdge
   setEdge(view, 1, getRightEdge(view));
@@ -539,7 +541,7 @@ export function swapEdges(view){
   setDragBuffer(view, 2, tempX);
 
   // Keep state updated
-  setState(view, view.currentState.state, getLeftEdge(view), getRightEdge(view), getLeftEdgeDate(view), getRightEdgeDate(view));
+  setState(view, view.currentState.state, view.leftEdge.x, getRightEdge(view), view.leftEdge.date, getRightEdgeDate(view));
 }
 
 export function transformBlanket(view, zoomLeft, zoomRight){
@@ -571,10 +573,10 @@ export function updateBlanket(view){
   if(!view.blanket){return;}
   let left, right, stationaryX, dynamicX;
 
-  if(getRightEdge(view) === getLeftEdge(view)){
+  if(getRightEdge(view) === view.leftEdge.x){
     setBlanket(view, view.leftStop - 1, view.leftStop);
   } else {
-    stationaryX = view.id === 1 ? getRightEdge(view) : getLeftEdge(view);
+    stationaryX = view.id === 1 ? getRightEdge(view) : view.leftEdge.x;
     if (view.offset){
       // blanket & edges not direct from mouseX
       if(view.mouseX >= view.leftStop + view.offset){
@@ -599,7 +601,7 @@ export function zoomStart(view){
   view.isPanning = false
 
   // These are the original x-coords from before transformation to use throughout zoom event
-  zoomLeft = convertToCoord(view, getLeftEdgeDate(view));
+  zoomLeft = convertToCoord(view, view.leftEdge.date);
   zoomRight = view.rightEdge ? convertToCoord(view, getRightEdgeDate(view)) : null;
 }
 
@@ -626,7 +628,7 @@ export function zoomEnd(view) {
   }
   view.isPanning = false;
   // Now we can update the state to reflect new transformations
-  setStateCoords(view, getLeftEdge(view), getRightEdge(view));
+  setStateCoords(view, view.leftEdge.x, getRightEdge(view));
   printState(view);
 }
 

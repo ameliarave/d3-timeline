@@ -13,6 +13,10 @@ export class EdgeView {
     line.attr("stroke", "red");
   }
 
+  get x() {
+    return parseFloat(this.line.attr('x1'));
+  }
+
   get date() {
     return this.line.datum().date
   }
