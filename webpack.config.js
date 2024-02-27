@@ -19,7 +19,7 @@ const libraryConfig = {
 };
 
 // Example Configuration
-const exampleConfig = {  
+const exampleConfig = {
   entry: './examples/example.js',
   output: {
     path: path.resolve(__dirname, 'examples/dist'),
@@ -42,7 +42,6 @@ const exampleConfig = {
     new CopyPlugin({
       patterns: [
         { from: 'examples/example.css', to: 'style.css' },
-        { from: 'src/d3.v6.min.js', to: 'd3.v6.min.js' },
       ],
     }),
   ],
