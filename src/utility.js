@@ -71,6 +71,7 @@ export function createBuffer(view, id, xCord, yCord = 0){
     .attr('id', id)
     .attr('class', 'buffer');
   dragBuffer.style('cursor', 'pointer');
+  dragBuffer.call(view.drag);
 
   return dragBuffer;
 }
@@ -86,8 +87,7 @@ export function createLine(view, id, xCord){
     .attr('stroke', 'red')
     .attr('stroke-width', 1)
     .attr('class', 'vertical-line')
-    .attr('id', id);
-  let edgeView = new EdgeView(edge);
+    .attr('id', id);  
   edge.datum({date});
 
   // Create invisible dragBuffer behind line
@@ -95,7 +95,7 @@ export function createLine(view, id, xCord){
 
   const labelX = id === 1 ? xCord - 176 : xCord + 15;
 
-  const foreignObject = view.svg.append("foreignObject")
+  const label = view.svg.append("foreignObject")
     .attr('x', labelX)
     .attr('y', 280)
     .attr('width', 160)
@@ -104,20 +104,18 @@ export function createLine(view, id, xCord){
   const timeFormat = d3.timeFormat("%b %e %I:%M:%S %p")
   const dateString = timeFormat(date)
 
-  foreignObject.append("xhtml:div")
+  label.append("xhtml:div")
     .attr("class", "line-label")
     .text(dateString)
 
+  let edgeView = new EdgeView(edge, label, dragBuffer);
+
   if(id === 1){
     view.leftEdge = edgeView;
-    view.dragBuffer1 = dragBuffer;
-    view.dragBuffer1.call(view.drag);
-    view.label1 = foreignObject;
+    view.label1 = label;
   } else {
     view.rightEdge = edgeView;
-    view.dragBuffer2 = dragBuffer;
-    view.label2 = foreignObject;
-    view.dragBuffer2.call(view.drag);
+    view.label2 = label;
   }
 }
 
@@ -132,16 +130,6 @@ export function getArrow(view){
   if(!view.arrow){return null;}
   return view.arrow.attr('x1');
 }
-
-
-// Delete
-// export function view.leftEdge.x{
-//   return parseFloat(view.leftEdge.line.attr('x1'));
-// }
-
-// export function view.leftEdge.date{
-//   return view.leftEdge.date;
-// }
 
 export function getLeftDate(view){
   return view.currentState.leftDate;
@@ -268,8 +256,11 @@ export function initBlanket(view){
       .attr('opacity', 0.4)
       .attr('class', "blanket");
     console.log("Blanket initialized");
-    view.dragBuffer1 = createBuffer(view, 1, view.leftEdge.x);
-    view.dragBuffer2 = createBuffer(view, 2, view.getRightEdge());
+
+    const leftBuffer = createBuffer(view, 1, view.leftEdge.x);
+    const rightBuffer = createBuffer(view, 2, view.rightEdge.x);
+    view.leftEdge.setDragBuffer(leftBuffer);
+    view.rightEdge.setDragBuffer(rightBuffer);
   }
 }
 
@@ -304,13 +295,11 @@ export function removeArrow(view){
 }
 
 export function removeDragBuffers(view){
-  if(view.dragBuffer1){
-    view.dragBuffer1.remove();
-    view.dragBuffer1 = null;
+  if(view.leftEdge){
+    view.leftEdge.removeDragBuffer();
   }
-  if(view.dragBuffer2){
-    view.dragBuffer2.remove();
-    view.dragBuffer2 = null;
+  if(view.rightEdge){
+    view.rightEdge.removeDragBuffer();
   }
 }
 
@@ -359,15 +348,6 @@ export function setBlanket(view, leftX, rightX){
   const maxX = Math.max(leftX, rightX);
   view.blanket.attr('x', minX);
   view.blanket.attr('width', maxX - minX);
-}
-
-export function setDragBuffer(view, id, xCoord){
-  // If id != 1 or 2, buffer == null
-  let buffer = id === 1 || id === 2 ? view.dragBuffer1 : null;
-  if(!buffer){return;}
-  // Assign buffer respective to id parameter
-  buffer = id === 1 ? buffer : view.dragBuffer2;
-  buffer.attr('x', xCoord - 25);
 }
 
 export function setEdge(view, id, xCoord){
@@ -532,13 +512,13 @@ export function swapEdges(view){
 
   // leftEdge = rightEdge
   setEdge(view, 1, getRightEdge(view));
-  setEdgeDate(view, 1, getRightEdgeDate(view));
-  setDragBuffer(view, 1, getRightEdge(view));
+  setEdgeDate(view, 1, getRightEdgeDate(view));  
+  view.leftEdge.dragBuffer = view.rightEdge.x;
 
   // rightEdge = leftEdge
   setEdge(view, 2, tempX);
   setEdgeDate(view, 2, tempDate);
-  setDragBuffer(view, 2, tempX);
+  view.rightEdge.dragBuffer = tempX;
 
   // Keep state updated
   setState(view, view.currentState.state, view.leftEdge.x, getRightEdge(view), view.leftEdge.date, getRightEdgeDate(view));
@@ -557,14 +537,14 @@ export function transformLine(view, zoomLeft, zoomRight){
 
   if(leftX){
     setEdge(view, 1, leftX);
-    setDragBuffer(view, 1, leftX);
+    view.leftEdge.dragBuffer = leftX;
     setLabel(view, 1, leftX);
     setArrow(view, leftX);
     setArrowBuffer(view, leftX);
   }
   if(rightX){
     setEdge(view, 2, rightX);
-    setDragBuffer(view, 2, rightX);
+    view.rightEdge.dragBuffer = rightX;
     setLabel(view, 2, rightX);
   }
 }
@@ -630,28 +610,28 @@ export function zoomEnd(view) {
   // Now we can update the state to reflect new transformations
   setStateCoords(view, view.leftEdge.x, getRightEdge(view));
   printState(view);
+  printEdgeStates(view);
+}
+
+export function printEdgeStates(view){
+  if(view.leftEdge){
+    console.log("leftEdge: x ", view.leftEdge.x, " dragBuffer ", view.leftEdge.dragBuffer, " label ", view.leftEdge.label);
+  } else {
+    console.log("No leftEdge");
+  }
+  if(view.rightEdge){
+    console.log("rightEdge: x ", view.rightEdge.x, " dragBuffer ", view.rightEdge.dragBuffer, " label ", view.rightEdge.label);
+  } else {
+    console.log("No rightEdge");
+  }
 }
 
 /*
 TODO:
-(DONE) Fix zoom transformations for new objects: applyX() & always start with original-scale X coord
-(DONE) Swapping Labels on overlap
-(DONE) Arrow dynamics for drag [ arrow hidden after range_selected -> reappears in date_selected ]
-(DONE) Initial blanket placement & drag intuition (arrow under cursor or blanket edge?)
-(DONE) Bug: range_selected not being set after swap() happens on initial blanket creation/pinning
-(DONE) Write getters & setters for objects i.e. dragBuffer, label, blanket, arrow
-(DONE) DragBuffer2 disappearing after edge swap
 (2.3) What to do when edges dragged near boundaries & label is unreadable?
-       => Also just general dynamics at boundaries
-       => SOLUTION I: When blanket is close to viewable boundary (in default zoom, this is end of date range), move respective label to be
-          pinned inside the respective left/right blanket edge
-        => SOLUTION II: Pan the timeline along with drag that would otherwise go out of frame (such that label is visible). If reaches end of date range, move label
+        => SOLUTION : Pan the timeline along with drag that would otherwise go out of frame (such that label is visible). If reaches end of date range, move label
         to inside of blanket so user can drag edge all the way up until the end of the date range
 
         NOTE: even with single date_selected, user can currently drag leftEdge off the end of the timeline and past end of date range => needs fixing
 (2.4) Zooming on mobile while one finger is on a dragabble item....glitches
-
-(DONE) Debug Mobile
-(4) Beautify code
-(5) Write tests
 */

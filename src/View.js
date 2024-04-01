@@ -11,11 +11,11 @@ export class View {
 
   // FIXME: why aren't getters working
   // get width() {
-  //   this.svg.node().width.baseVal.value;
+  //   return this.svg.node().width.baseVal.value;
   // }
 
   // get height() {
-  //   this.svg.node().height.baseVal.value;
+  //   return this.svg.node().height.baseVal.value;
   // }
 
   constructor(startDate, endDate, svgElement) {
@@ -24,13 +24,10 @@ export class View {
     this.svg = svgElement;
     this.width =  this.svg.node().width.baseVal.value;
     this.height = this.svg.node().height.baseVal.value;
-
     this.arrow = null;
     this.arrowBuffer = null;
     this.activeTouch = 0; // counter to determine how many active touches on mobile screen. Used to avoid undesired click triggers
     this.blanket = null; // d3 <rect> element that highlights the area selected between two datetimes
-    this.dragBuffer1 = null; // hidden d3 <rect> element with d3 drag behavior attached for dragging date selection lines
-    this.dragBuffer2 = null; // hidden d3 <rect> element with d3 drag behavior attached for dragging date selection lines
     this.leftEdge = null;  // d3 <line> element that represents a selected date
     this.offset = null;
     this.rightEdge= null;   // d3 <line> element that represents a selected date
@@ -186,7 +183,9 @@ export class View {
     }
 
     this.setEdge(this.id, target);
-    this.setDragBuffer(this.id, target);
+    if(this.id === 1){this.leftEdge.dragBuffer = target;}
+    if(this.id === 2){this.rightEdge.dragBuffer = target;}
+    // TODO use enum to enforce id is only ever 1, 2, or 3
 
     // Maintain the invariant that leftEdge <= rightEdge. Check if they need to be swapped.
     if (this.rightEdge && this.leftEdge.x > this.getRightEdge() ){
@@ -195,7 +194,7 @@ export class View {
 
       // Swap label coordinates relative to respective edges
       this.setLabel(1, this.leftEdge.x);
-      this.setLabel(2, this.getRightEdge());
+      this.setLabel(2, this.rightEdge.x);
 
       // Swap label dates respectively
       this.setLabelDate(1, this.convertToDate(this.leftEdge.x));
@@ -288,6 +287,7 @@ export class View {
     this.resetBlanket();
     this.setState(States.IDLE, null, null, null, null);
     this.printState();
+    this.printEdgeStates();
   }
 
   // Handles the selection of a single date associated with a single vertical line.
@@ -307,7 +307,7 @@ export class View {
       } else {  // Envoked by longPress
         this.setEdge(1, this.mouseX);
         this.setEdgeDate(1, date);
-        this.setDragBuffer(1, this.mouseX);
+        this.leftEdge.dragBuffer = this.mouseX;
         this.setLabel(1, this.mouseX);
         this.setLabelDate(1, date);
         this.setArrow(this.mouseX);
@@ -315,6 +315,7 @@ export class View {
     }
     this.setState(States.DATE_SELECTED, this.leftEdge.x, null, this.leftEdge.date, null);
     this.printState();
+    this.printEdgeStates();
   }
 
   // Handles the selection of a range between two dates associated with two vertical lines and a grey <rect> ('blanket')
@@ -329,11 +330,12 @@ export class View {
     this.setEdgeDate(2, rightDate);
     this.setState(States.RANGE_SELECTED, leftX, rightX, leftDate, rightDate);
 
-    this.dragBuffer1.call(this.drag); // TODO move to one call in util.createLine()
-    this.dragBuffer2.call(this.drag); // TODO ISSUE: single call in createLine()
+/*     this.dragBuffer1.call(this.drag); // TODO move to one call in util.createLine()
+    this.dragBuffer2.call(this.drag); // TODO ISSUE: single call in createLine() */
 
     this.removeArrow();
     this.printState();
+    this.printEdgeStates();
   }
 
 // ================================================================================================================================== //
@@ -416,6 +418,10 @@ export class View {
     util.printState(this);
   }
 
+  printEdgeStates(){
+    util.printEdgeStates(this);
+  }
+
   removeArrow(){
     util.removeArrow(this);
   }
@@ -444,10 +450,6 @@ export class View {
 
   setBlanket(leftX, rightX){
     util.setBlanket(this, leftX, rightX);
-  }
-
-  setDragBuffer(id, xCoord){
-    util.setDragBuffer(this, id, xCoord);
   }
 
   setEdge(id, xCoord){

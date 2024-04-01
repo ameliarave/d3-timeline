@@ -32,7 +32,9 @@ const exampleConfig = {
       directory: path.join(__dirname, 'examples/dist'),
     },
     host: '0.0.0.0', // allow access from other devices
-    port: 8081
+    port: 8081,
+    hot: true,
+    watchFiles: ['src/**/*', 'examples/**/*'],
   },
   plugins: [
     new HtmlWebpackPlugin({
